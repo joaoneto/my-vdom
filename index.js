@@ -1,4 +1,4 @@
-let dom = {
+let vDOM = {
   nodeName: 'div',
   attrs: {},
   children: []
@@ -27,23 +27,23 @@ const _diff = (before, after) => {
 };
 
 const _renderDOM = (element, domElement) => {
-  let nodeRef;
+  let node;
 
   if (element.nodeName === 'textNode') {
-    nodeRef = document.createTextNode(element.attrs.value);
+    node = document.createTextNode(element.attrs.value);
   } else {
-    nodeRef = document.createElement(element.nodeName);
+    node = document.createElement(element.nodeName);
 
     for (let attr in element.attrs) {
-      nodeRef.setAttribute(attr, element.attrs[attr]);
+      node.setAttribute(attr, element.attrs[attr]);
     }
 
     element.children.forEach((child) => {
-      _renderDOM(child, nodeRef);
+      _renderDOM(child, node);
     });
   }
 
-  domElement.appendChild(nodeRef);
+  domElement.appendChild(node);
 
   return domElement;
 };
@@ -67,9 +67,9 @@ for (let x = 0; x < 3; x++) {
   _append(li, ul);
 }
 
-_append(ul, dom);
+_append(ul, vDOM);
 
-const DOMRoot = _renderDOM(dom, document.getElementById('root'));
+const DOMRoot = _renderDOM(vDOM, document.getElementById('root'));
 
-console.log('VDOM', dom);
+console.log('VDOM', vDOM);
 console.log('DOMRoot', DOMRoot);
