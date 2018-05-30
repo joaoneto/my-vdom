@@ -1,54 +1,47 @@
 let dom = {
   nodeName: 'div',
-  nodeValue: '',
   attrs: {},
   children: []
 };
 
 const _append = (element, parent) => {
-  // console.log(`[V-DOM _append] ${element.nodeName} to ${parent.nodeName}`);
   parent.children.push(element);
   return element;
 };
 
 const _createElement = (nodeName, attrs = {}, children = []) => {
-  // console.log(`[V-DOM _createElement] ${nodeName}`);
   let element = {
-    nodeName: nodeName.toLowerCase(),
-    nodeValue: '',
+    nodeName,
     attrs,
     children
   };
   return element;
 };
 
-const _setAttr = (element, attr, value) => {
-  // console.log(`[V-DOM _setAttr] ${attr} to ${element.nodeName}`);
-  element.attrs[attr] = value;
-  return element;
-};
-
-const _setText = (element, str) => {
-  // console.log(`[V-DOM _setText] ${str} to ${element.nodeName}`);
-  element.nodeValue = str;
-  return element;
-};
+const _createTextNode = (value = '') => {
+  return _createElement('textNode', { value });
+}
 
 const _diff = (before, after) => {
 
 };
 
 const _renderDOM = (element, domElement) => {
-  const nodeRef = element.nodeRef = document.createElement(element.nodeName);
+  let nodeRef;
 
-  for (let attr in element.attrs) {
-    nodeRef.setAttribute(attr, element.attrs[attr]);
+  if (element.nodeName === 'textNode') {
+    nodeRef = document.createTextNode(element.attrs.value);
+  } else {
+    nodeRef = document.createElement(element.nodeName);
+
+    for (let attr in element.attrs) {
+      nodeRef.setAttribute(attr, element.attrs[attr]);
+    }
+
+    element.children.forEach((child) => {
+      _renderDOM(child, nodeRef);
+    });
   }
-  nodeRef.appendChild(document.createTextNode(element.nodeValue));
-
-  element.children.forEach((child) => {
-    _renderDOM(child, nodeRef);
-  });
 
   domElement.appendChild(nodeRef);
 
@@ -56,26 +49,25 @@ const _renderDOM = (element, domElement) => {
 };
 
 let ul = _createElement('ul');
-_append(ul, dom);
 
-for (let x = 0; x < 1000; x++) {
-  _append(
-    _setAttr(_setText(_createElement('a'), `My link ${x}`), 'href', '#'),
-    _setText(
-      _append(
-        _createElement('span'),
-        _setAttr(
-          _append(
-            _createElement('li'),
-            ul
-          ),
-          'id', x
-        )
-      ),
-      'SPAM ;)'
-    )
+for (let x = 0; x < 3; x++) {
+  let li = _createElement(
+    'li',
+    null,
+    [
+      _createTextNode('SPAM '),
+      _createElement('span', { id: x }, [
+        _createElement('a', { href: '#' }, [
+          _createTextNode(`My link ${x}`)
+        ])
+      ]),
+      _createTextNode(' ;)'),
+    ]
   );
+  _append(li, ul);
 }
+
+_append(ul, dom);
 
 const DOMRoot = _renderDOM(dom, document.getElementById('root'));
 
