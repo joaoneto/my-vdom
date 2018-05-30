@@ -46,6 +46,10 @@ const _renderDOM = (element, domElement) => {
   return domElement;
 };
 
+const _isChild = (children, node) => {
+  return children.some(child => child.node === node);
+}
+
 const _diff = (element) => {
   const node = element.node;
   let patches = [];
@@ -56,11 +60,9 @@ const _diff = (element) => {
   for (let index = 0; index < childCount; index++) {
     if (!node.childNodes[index] && element.children[index]) {
       patches.push({ action: 'ADD_CHILD', index, parent: node, element: element.children[index] });
+    } else if (!_isChild(element.children, node.childNodes[index])) {
+      patches.push({ action: 'REMOVE_CHILD', index, parent: node, element: node.childNodes[index] });
     }
-    // else if (!node.contains(element.children[index])) {
-    //   console.log('contains', !node.contains(element.children[index]));
-    //   patches.push({ action: 'REMOVE_CHILD', index, parent: node, element: node.childNodes[index] });
-    // }
   }
 
   return patches;
@@ -125,6 +127,6 @@ _append(createLi(Date.now().toString(32)), ul);
 _updateDOM(ul);
 
 // update vDOM, removing a li child from ul parent
-ul.children.splice(2, 1);
+ul.children.splice(1, 1);
 console.log('ul.children', ul.children);
 _updateDOM(ul);
