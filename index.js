@@ -19,39 +19,82 @@ const _createElement = (nodeName, attrs = {}, children = []) => {
 };
 
 const _createTextNode = (value = '') => {
-  return _createElement('textNode', { value });
-}
-
-const _diff = (before, after) => {
-
+  return _createElement('text', { value });
 };
 
 const _renderDOM = (element, domElement) => {
-  let node;
-
-  if (element.nodeName === 'textNode') {
-    node = document.createTextNode(element.attrs.value);
-  } else {
-    node = document.createElement(element.nodeName);
-
-    for (let attr in element.attrs) {
-      node.setAttribute(attr, element.attrs[attr]);
-    }
-
-    element.children.forEach((child) => {
-      _renderDOM(child, node);
-    });
+  if (element.nodeName === 'text') {
+    let node = document.createTextNode(element.attrs.value);
+    element.node = node;
+    domElement.appendChild(node);
+    return domElement;
   }
+
+  let node = document.createElement(element.nodeName);
+  element.node = node;
+
+  for (let attr in element.attrs) {
+    node.setAttribute(attr, element.attrs[attr]);
+  }
+
+  element.children.forEach((child) => {
+    _renderDOM(child, node);
+  });
 
   domElement.appendChild(node);
 
   return domElement;
 };
 
+const _diff = (element) => {
+  const node = element.node;
+  let patches = [];
+  // 1. get attributes diff
+
+  // 2. get children patches
+  const childCount = Math.max(node.childNodes.length, element.children.length);
+  for (let index = 0; index < childCount; index++) {
+    if (!node.childNodes[index] && element.children[index]) {
+      patches.push({ action: 'ADD_CHILD', index, parent: node, element: element.children[index] });
+    }
+    // else if (!node.contains(element.children[index])) {
+    //   console.log('contains', !node.contains(element.children[index]));
+    //   patches.push({ action: 'REMOVE_CHILD', index, parent: node, element: node.childNodes[index] });
+    // }
+  }
+
+  return patches;
+};
+
+const _updateDOM = (element) => {
+  // 1. generate patch from diff
+  const patches = _diff(element);
+
+  // 2. apply patch
+  patches.map(patch => {
+    switch (patch.action) {
+      case 'ADD_CHILD': {
+        _renderDOM(patch.element, patch.parent);
+        break;
+      }
+      case 'REMOVE_CHILD': {
+        console.log(element.node, patch);
+        element.node.removeChild(patch.element);
+        break;
+      }
+    }
+  });
+
+  // 3. render with vDOM node reference
+};
+
+
+// app
+
 let ul = _createElement('ul');
 
-for (let x = 0; x < 3; x++) {
-  let li = _createElement(
+const createLi = (x) => {
+  return _createElement(
     'li',
     null,
     [
@@ -64,7 +107,10 @@ for (let x = 0; x < 3; x++) {
       _createTextNode(' ;)'),
     ]
   );
-  _append(li, ul);
+}
+
+for (let x = 0; x < 3; x++) {
+  _append(createLi(x), ul);
 }
 
 _append(ul, vDOM);
@@ -73,3 +119,12 @@ const DOMRoot = _renderDOM(vDOM, document.getElementById('root'));
 
 console.log('VDOM', vDOM);
 console.log('DOMRoot', DOMRoot);
+
+// update vDOM, adding a li child on ul parent
+_append(createLi(Date.now().toString(32)), ul);
+_updateDOM(ul);
+
+// update vDOM, removing a li child from ul parent
+ul.children.splice(2, 1);
+console.log('ul.children', ul.children);
+_updateDOM(ul);
