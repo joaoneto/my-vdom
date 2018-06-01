@@ -60,8 +60,10 @@ const _diff = (element) => {
   const attributesNames = Object.keys(element.attributes);
   const attributesCount = Math.max(node.attributes.length, attributesNames.length);
   for (let index = 0; index < attributesCount; index++) {
-    if (!node.getAttribute(attributesNames[index]) && element.attributes[attributesNames[index]]) {
-      patches.push({ action: 'ADD_ATTRIBUTE', index, parent: node, attribute: { name: attributesNames[index], value: element.attributes[attributesNames[index]] } });
+    const nodeAttributeValue = node.getAttribute(attributesNames[index]);
+    const elementAttributeValue = element.attributes[attributesNames[index]];
+    if (nodeAttributeValue !== elementAttributeValue) {
+      patches.push({ action: 'UPDATE_ATTRIBUTE', index, parent: node, attribute: { name: attributesNames[index], value: elementAttributeValue } });
     }
   }
 
@@ -92,8 +94,12 @@ const _updateDOM = (element) => {
   // 2. apply patch
   patches.map(patch => {
     switch (patch.action) {
-      case 'ADD_ATTRIBUTE': {
+      case 'UPDATE_ATTRIBUTE': {
         element.node.setAttributeNS(null, patch.attribute.name, patch.attribute.value);
+        break;
+      }
+      case 'REPLACE_ATTRIBUTE': {
+        console.log(patch);
         break;
       }
       case 'ADD_CHILD': {
@@ -163,4 +169,8 @@ _updateDOM(ul.children[8].children[1].children[0]);
 
 // add className attribute on ul
 ul.attributes.class = 'my-ul';
+_updateDOM(ul);
+
+// update className on ul
+ul.attributes.class = 'my-ul-green';
 _updateDOM(ul);
