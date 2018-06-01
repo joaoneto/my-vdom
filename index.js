@@ -1,6 +1,6 @@
 let vDOM = {
   nodeName: 'div',
-  attrs: {},
+  attributes: {},
   children: []
 };
 
@@ -9,10 +9,12 @@ const _append = (element, parent) => {
   return element;
 };
 
-const _createElement = (nodeName, attrs = {}, children = []) => {
+const _createElement = (nodeName, attributes, children = []) => {
+  attributes = attributes || {};
+  children = children || [];
   let element = {
     nodeName,
-    attrs,
+    attributes,
     children
   };
   return element;
@@ -24,7 +26,7 @@ const _createTextNode = (value = '') => {
 
 const _renderDOM = (element, domElement) => {
   if (element.nodeName === 'text') {
-    let node = document.createTextNode(element.attrs.value);
+    let node = document.createTextNode(element.attributes.value);
     element.node = node;
     domElement.appendChild(node);
     return domElement;
@@ -33,8 +35,8 @@ const _renderDOM = (element, domElement) => {
   let node = document.createElementNS('http://www.w3.org/1999/xhtml', element.nodeName);
   element.node = node;
 
-  for (let attr in element.attrs) {
-    node.setAttributeNS(null, attr, element.attrs[attr]);
+  for (let attribute in element.attributes) {
+    node.setAttributeNS(null, attribute, element.attributes[attribute]);
   }
 
   element.children.forEach((child) => {
@@ -48,12 +50,20 @@ const _renderDOM = (element, domElement) => {
 
 const _isChild = (children, node) => {
   return children.some(child => child.node === node);
-}
+};
 
 const _diff = (element) => {
   const node = element.node;
   let patches = [];
+
   // 1. get attributes diff
+  const attributesNames = Object.keys(element.attributes);
+  const attributesCount = Math.max(node.attributes.length, attributesNames.length);
+  for (let index = 0; index < attributesCount; index++) {
+    if (!node.getAttribute(attributesNames[index]) && element.attributes[attributesNames[index]]) {
+      patches.push({ action: 'ADD_ATTRIBUTE', index, parent: node, attribute: { name: attributesNames[index], value: element.attributes[attributesNames[index]] } });
+    }
+  }
 
   // 2. get children diff
   const childCount = Math.max(node.childNodes.length, element.children.length);
@@ -62,7 +72,7 @@ const _diff = (element) => {
       patches.push({ action: 'ADD_CHILD', index, parent: node, element: element.children[index] });
     } else if (!_isChild(element.children, node.childNodes[index])) {
       patches.push({ action: 'REMOVE_CHILD', index, parent: node, element: node.childNodes[index] });
-    } else if (node.childNodes[index].nodeName === '#text' && node.childNodes[index].nodeValue !== element.children[index].attrs.value) {
+    } else if (node.childNodes[index].nodeName === '#text' && node.childNodes[index].nodeValue !== element.children[index].attributes.value) {
       patches.push({ action: 'REPLACE_CHILD', index, parent: node, element: element.children[index] });
     }
   }
@@ -82,6 +92,10 @@ const _updateDOM = (element) => {
   // 2. apply patch
   patches.map(patch => {
     switch (patch.action) {
+      case 'ADD_ATTRIBUTE': {
+        element.node.setAttributeNS(null, patch.attribute.name, patch.attribute.value);
+        break;
+      }
       case 'ADD_CHILD': {
         _renderDOM(patch.element, patch.parent);
         break;
@@ -91,7 +105,7 @@ const _updateDOM = (element) => {
         break;
       }
       case 'REPLACE_CHILD': {
-        element.node.childNodes[patch.index].nodeValue = patch.element.attrs.value;
+        element.node.childNodes[patch.index].nodeValue = patch.element.attributes.value;
         break;
       }
     }
@@ -139,10 +153,14 @@ ul.children.splice(1, 1);
 _updateDOM(ul);
 
 // update a li text child nodeValue
-ul.children[8].children[0].attrs.value = 'Lorem ipsum ';
-ul.children[8].children[2].attrs.value = ' dolor sit amet';
+ul.children[8].children[0].attributes.value = 'Lorem ipsum ';
+ul.children[8].children[2].attributes.value = ' dolor sit amet';
 _updateDOM(ul.children[8]);
 
 // always need to pass current element on _updateDOM, to prevent deep children diff
-ul.children[8].children[1].children[0].children[0].attrs.value = ' ------- ';
+ul.children[8].children[1].children[0].children[0].attributes.value = ' ------- ';
 _updateDOM(ul.children[8].children[1].children[0]);
+
+// add className attribute on ul
+ul.attributes.class = 'my-ul';
+_updateDOM(ul);
