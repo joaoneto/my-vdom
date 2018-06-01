@@ -55,15 +55,22 @@ const _diff = (element) => {
   let patches = [];
   // 1. get attributes diff
 
-  // 2. get children patches
+  // 2. get children diff
   const childCount = Math.max(node.childNodes.length, element.children.length);
   for (let index = 0; index < childCount; index++) {
     if (!node.childNodes[index] && element.children[index]) {
       patches.push({ action: 'ADD_CHILD', index, parent: node, element: element.children[index] });
     } else if (!_isChild(element.children, node.childNodes[index])) {
       patches.push({ action: 'REMOVE_CHILD', index, parent: node, element: node.childNodes[index] });
+    } else if (node.childNodes[index].nodeName === '#text' && node.childNodes[index].nodeValue !== element.children[index].attrs.value) {
+      patches.push({ action: 'REPLACE_CHILD', index, parent: node, element: element.children[index] });
     }
   }
+
+  // 3. get deep children diff
+  // element.children.forEach(child => {
+  //   if (child.node) patches = patches.concat(_diff(child));
+  // });
 
   return patches;
 };
@@ -80,14 +87,15 @@ const _updateDOM = (element) => {
         break;
       }
       case 'REMOVE_CHILD': {
-        console.log(element.node, patch);
         element.node.removeChild(patch.element);
+        break;
+      }
+      case 'REPLACE_CHILD': {
+        element.node.childNodes[patch.index].nodeValue = patch.element.attrs.value;
         break;
       }
     }
   });
-
-  // 3. render with vDOM node reference
 };
 
 
@@ -111,7 +119,7 @@ const createLi = (x) => {
   );
 }
 
-for (let x = 0; x < 3; x++) {
+for (let x = 0; x < 10; x++) {
   _append(createLi(x), ul);
 }
 
@@ -122,11 +130,19 @@ const DOMRoot = _renderDOM(vDOM, document.getElementById('root'));
 console.log('vDOM', vDOM);
 console.log('DOMRoot', DOMRoot);
 
-// update vDOM, adding a li child on ul parent
+// add a li child on ul parent
 _append(createLi(Date.now().toString(32)), ul);
 _updateDOM(ul);
 
-// update vDOM, removing a li child from ul parent
+// remove a li child from ul parent
 ul.children.splice(1, 1);
-console.log('ul.children', ul.children);
 _updateDOM(ul);
+
+// update a li text child nodeValue
+ul.children[8].children[0].attrs.value = 'Lorem ipsum ';
+ul.children[8].children[2].attrs.value = ' dolor sit amet';
+_updateDOM(ul.children[8]);
+
+// always need to pass current element on _updateDOM, to prevent deep children diff
+ul.children[8].children[1].children[0].children[0].attrs.value = ' ------- ';
+_updateDOM(ul.children[8].children[1].children[0]);
