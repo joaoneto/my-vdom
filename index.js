@@ -57,13 +57,16 @@ const _diff = (element) => {
   let patches = [];
 
   // 1. get attributes diff
-  const attributesNames = Object.keys(element.attributes);
+  const attributesNames = [...new Set([...Object.values(node.attributes).map(attribute => attribute.name), ...Object.keys(element.attributes)])];
   const attributesCount = Math.max(node.attributes.length, attributesNames.length);
   for (let index = 0; index < attributesCount; index++) {
     const nodeAttributeValue = node.getAttribute(attributesNames[index]);
     const elementAttributeValue = element.attributes[attributesNames[index]];
-    if (nodeAttributeValue !== elementAttributeValue) {
+
+    if (elementAttributeValue && nodeAttributeValue !== elementAttributeValue) {
       patches.push({ action: 'UPDATE_ATTRIBUTE', index, parent: node, attribute: { name: attributesNames[index], value: elementAttributeValue } });
+    } else if (!elementAttributeValue && nodeAttributeValue) {
+      patches.push({ action: 'REMOVE_ATTRIBUTE', index, parent: node, attribute: { name: attributesNames[index] } });
     }
   }
 
@@ -95,11 +98,11 @@ const _updateDOM = (element) => {
   patches.map(patch => {
     switch (patch.action) {
       case 'UPDATE_ATTRIBUTE': {
-        element.node.setAttributeNS(null, patch.attribute.name, patch.attribute.value);
+        patch.parent.setAttributeNS(null, patch.attribute.name, patch.attribute.value);
         break;
       }
-      case 'REPLACE_ATTRIBUTE': {
-        console.log(patch);
+      case 'REMOVE_ATTRIBUTE': {
+        patch.parent.removeAttribute(patch.attribute.name);
         break;
       }
       case 'ADD_CHILD': {
@@ -173,4 +176,8 @@ _updateDOM(ul);
 
 // update className on ul
 ul.attributes.class = 'my-ul-green';
+_updateDOM(ul);
+
+// delete className on ul
+delete ul.attributes.class;
 _updateDOM(ul);
