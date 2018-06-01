@@ -30,11 +30,11 @@ const _renderDOM = (element, domElement) => {
     return domElement;
   }
 
-  let node = document.createElement(element.nodeName);
+  let node = document.createElementNS('http://www.w3.org/1999/xhtml', element.nodeName);
   element.node = node;
 
   for (let attr in element.attrs) {
-    node.setAttribute(attr, element.attrs[attr]);
+    node.setAttributeNS(null, attr, element.attrs[attr]);
   }
 
   element.children.forEach((child) => {
@@ -119,7 +119,7 @@ _append(ul, vDOM);
 
 const DOMRoot = _renderDOM(vDOM, document.getElementById('root'));
 
-console.log('VDOM', vDOM);
+console.log('vDOM', vDOM);
 console.log('DOMRoot', DOMRoot);
 
 // update vDOM, adding a li child on ul parent
