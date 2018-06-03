@@ -9,19 +9,15 @@ const _append = (element, parent) => {
   return element;
 };
 
-const _createElement = (nodeName, attributes, children = []) => {
+const _createElement = (nodeName, attributes, ...children) => {
   attributes = attributes || {};
   children = children || [];
   let element = {
     nodeName,
     attributes,
-    children
+    children: children.map(child => child.nodeName ? child : _createElement('text', { value: child }))
   };
   return element;
-};
-
-const _createTextNode = (value = '') => {
-  return _createElement('text', { value });
 };
 
 const _renderDOM = (element, domElement) => {
@@ -127,20 +123,14 @@ const _updateDOM = (element) => {
 let ul = _createElement('ul');
 
 const createLi = (x) => {
-  return _createElement(
-    'li',
-    null,
-    [
-      _createTextNode('SPAM '),
-      _createElement('span', { id: x }, [
-        _createElement('a', { href: '#' }, [
-          _createTextNode(`My link ${x}`)
-        ])
-      ]),
-      _createTextNode(' ;)'),
-    ]
+  return (
+    <li>
+      SPAM
+      <span id={x}><a href="#">My link {x}</a></span>
+      ;)
+    </li>
   );
-}
+};
 
 for (let x = 0; x < 10; x++) {
   _append(createLi(x), ul);
@@ -181,3 +171,7 @@ _updateDOM(ul);
 // delete className on ul
 delete ul.attributes.class;
 _updateDOM(ul);
+
+const component = () => (
+  <div>Lalala</div>
+);
