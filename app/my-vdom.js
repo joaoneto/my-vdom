@@ -5,6 +5,10 @@ const _append = (element, parent) => {
 module.exports._append = _append;
 
 const _createElement = (nodeName, attributes, ...children) => {
+  if (typeof nodeName === 'function') {
+    return (new nodeName({ ...attributes, children: children[0] })).render();
+  }
+
   attributes = attributes || {};
   children = children || [];
   let element = {
@@ -116,3 +120,16 @@ const _updateDOM = (element) => {
   });
 };
 module.exports._updateDOM = _updateDOM;
+
+class Component {
+  constructor(attributes) {
+    this.attributes = attributes;
+  }
+
+  setState(attributes) {
+    Object.assign(this.attributes, attributes);
+    console.log(this);
+    // _updateDOM(this.element);
+  }
+}
+module.exports.Component = Component;

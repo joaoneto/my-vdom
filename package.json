@@ -5,7 +5,7 @@
   "license": "MIT",
   "author": "João Neto <joaopintoneto@gmail.com>",
   "scripts": {
-    "dev": "webpack-recipes devserver 9000",
+    "dev": "webpack-recipes devserver",
     "build": "webpack-recipes build --mode=production"
   },
   "dependencies": {},

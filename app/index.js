@@ -1,5 +1,54 @@
-import { _append, _createElement, _renderDOM, _updateDOM } from './my-vdom';
+import { Component, _append, _createElement, _renderDOM, _updateDOM } from './my-vdom';
 
+// app _createElement JSX abstraction
+
+class App extends Component {
+  render() {
+    console.log('this', this.attributes.children);
+    return (
+      <div>{this.attributes.children}</div>
+    );
+  }
+}
+
+class Foo extends Component {
+  constructor(attributes) {
+    super(attributes);
+  }
+
+  render() {
+    // let x = 1;
+    // setInterval(() => {
+    //   x++;
+    //   this.setState({x});
+    //   // console.log(this.attributes.x);
+    // }, 1000);
+    return (
+      <div>Foo --- {this.attributes.children}</div>
+    );
+  }
+}
+
+_renderDOM(<App id="1"><div>lalala<Foo>Bar</Foo></div></App>, document.getElementById('root'));
+
+// app _createElement no JSX
+_renderDOM(_createElement(
+  'div',
+  { id: '1' },
+  _createElement(
+    'div',
+    null,
+    'lalala',
+    _createElement(
+      'div',
+      null,
+      'Bar'
+    )
+  )
+), document.getElementById('root2'));
+
+// legacy playground
+/*
 let vDOM = {
   nodeName: 'div',
   attributes: {},
@@ -24,7 +73,7 @@ for (let x = 0; x < 10; x++) {
 
 _append(ul, vDOM);
 
-const DOMRoot = _renderDOM(vDOM, document.getElementById('root'));
+const DOMRoot = _renderDOM(<App></App>, document.getElementById('root'));
 
 console.log('vDOM', vDOM);
 console.log('DOMRoot', DOMRoot);
@@ -61,3 +110,4 @@ _updateDOM(ul);
 const component = () => (
   <div>Lalala</div>
 );
+*/
