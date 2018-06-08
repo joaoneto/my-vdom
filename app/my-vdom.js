@@ -5,8 +5,12 @@ const _append = (element, parent) => {
 module.exports._append = _append;
 
 const _createElement = (nodeName, attributes, ...children) => {
+  console.log('_createElement', typeof nodeName, nodeName, attributes);
   if (typeof nodeName === 'function') {
-    return (new nodeName({ ...attributes, children: children[0] })).render();
+    const componentInstance = new nodeName({ ...attributes, children: children[0] });
+    const componentElement = componentInstance.render();
+    componentInstance.memoizeRenderedElement(componentElement);
+    return componentElement;
   }
 
   attributes = attributes || {};
@@ -124,12 +128,19 @@ module.exports._updateDOM = _updateDOM;
 class Component {
   constructor(attributes) {
     this.attributes = attributes;
+    console.log('constructor', this.attributes);
   }
 
-  setState(attributes) {
-    Object.assign(this.attributes, attributes);
-    console.log(this);
-    // _updateDOM(this.element);
+  memoizeRenderedElement(element) {
+    this.element = element;
+    this.element.attributes = this.attributes;
+  }
+
+  setState(state) {
+    Object.assign(this.state, state);
+    // console.log('setState', this.state);
+    // console.log(this.render());
+    _updateDOM(this.element);
   }
 }
 module.exports.Component = Component;

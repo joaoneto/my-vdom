@@ -4,7 +4,6 @@ import { Component, _append, _createElement, _renderDOM, _updateDOM } from './my
 
 class App extends Component {
   render() {
-    console.log('this', this.attributes.children);
     return (
       <div>{this.attributes.children}</div>
     );
@@ -14,17 +13,19 @@ class App extends Component {
 class Foo extends Component {
   constructor(attributes) {
     super(attributes);
+    this.attributes = {
+      x: 1
+    };
   }
 
   render() {
-    // let x = 1;
-    // setInterval(() => {
-    //   x++;
-    //   this.setState({x});
-    //   // console.log(this.attributes.x);
-    // }, 1000);
+    let x = 1;
+    setInterval(() => {
+      x++;
+      this.setState({x});
+    }, 1000);
     return (
-      <div>Foo --- {this.attributes.children}</div>
+      <div>Foo {this.attributes.x} --- {this.attributes.children}</div>
     );
   }
 }
