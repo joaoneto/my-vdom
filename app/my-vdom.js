@@ -1,3 +1,31 @@
+class Component {
+  constructor(attributes) {
+    this.attributes = attributes;
+  }
+
+  memoizeRenderedElement(element) {
+    this.element = element;
+    this.element.attributes = this.attributes;
+    this.attributes = new Proxy(this.element.attributes, {
+      set: function (obj, prop, value) {
+        obj[prop] = value;
+        return true;
+      }
+    });
+  }
+
+  setState(state) {
+    this.attributes = Object.assign(this.attributes, state);
+    // console.log('setState', this.state);
+    // console.log(this.render());
+    if (this.element) {
+      _updateDOM(this.element);
+      // console.log('this.element', this.element.attributes);
+    }
+  }
+}
+module.exports.Component = Component;
+
 const _append = (element, parent) => {
   parent.children.push(element);
   return element;
@@ -5,7 +33,6 @@ const _append = (element, parent) => {
 module.exports._append = _append;
 
 const _createElement = (nodeName, attributes, ...children) => {
-  console.log('_createElement', typeof nodeName, nodeName, attributes);
   if (typeof nodeName === 'function') {
     const componentInstance = new nodeName({ ...attributes, children: children[0] });
     const componentElement = componentInstance.render();
@@ -18,7 +45,9 @@ const _createElement = (nodeName, attributes, ...children) => {
   let element = {
     nodeName,
     attributes,
-    children: children.map(child => child.nodeName ? child : _createElement('text', { value: child }))
+    children: children.map(child => {
+      return child && child.nodeName ? child : _createElement('text', { value: child });
+    })
   };
   return element;
 };
@@ -124,23 +153,3 @@ const _updateDOM = (element) => {
   });
 };
 module.exports._updateDOM = _updateDOM;
-
-class Component {
-  constructor(attributes) {
-    this.attributes = attributes;
-    console.log('constructor', this.attributes);
-  }
-
-  memoizeRenderedElement(element) {
-    this.element = element;
-    this.element.attributes = this.attributes;
-  }
-
-  setState(state) {
-    Object.assign(this.state, state);
-    // console.log('setState', this.state);
-    // console.log(this.render());
-    _updateDOM(this.element);
-  }
-}
-module.exports.Component = Component;

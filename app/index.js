@@ -13,9 +13,7 @@ class App extends Component {
 class Foo extends Component {
   constructor(attributes) {
     super(attributes);
-    this.attributes = {
-      x: 1
-    };
+    // this.setState({ x: 0 });
   }
 
   render() {
