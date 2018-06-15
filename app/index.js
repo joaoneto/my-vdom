@@ -18,12 +18,15 @@ class Foo extends Component {
 
   render() {
     let x = 1;
+    const el = <text value={x} />;
     setInterval(() => {
       x++;
-      this.setState({x});
+      el.attributes.value = x;
+      _updateDOM(el);
     }, 1000);
+
     return (
-      <div>Foo {this.attributes.x} --- {this.attributes.children}</div>
+      <div>Foo {el} --- {this.attributes.children}</div>
     );
   }
 }

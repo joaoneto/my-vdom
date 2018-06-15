@@ -6,21 +6,18 @@ class Component {
   memoizeRenderedElement(element) {
     this.element = element;
     this.element.attributes = this.attributes;
-    this.attributes = new Proxy(this.element.attributes, {
-      set: function (obj, prop, value) {
-        obj[prop] = value;
-        return true;
-      }
-    });
+    // this.attributes = new Proxy(this.element.attributes, {
+    //   set: function (obj, prop, value) {
+    //     obj[prop] = value;
+    //     return true;
+    //   }
+    // });
   }
 
   setState(state) {
-    this.attributes = Object.assign(this.attributes, state);
-    // console.log('setState', this.state);
-    // console.log(this.render());
     if (this.element) {
+      this.attributes = Object.assign(this.attributes, state);
       _updateDOM(this.element);
-      // console.log('this.element', this.element.attributes);
     }
   }
 }
@@ -89,16 +86,23 @@ const _diff = (element) => {
   let patches = [];
 
   // 1. get attributes diff
-  const attributesNames = [...new Set([...Object.values(node.attributes).map(attribute => attribute.name), ...Object.keys(element.attributes)])];
-  const attributesCount = Math.max(node.attributes.length, attributesNames.length);
-  for (let index = 0; index < attributesCount; index++) {
-    const nodeAttributeValue = node.getAttribute(attributesNames[index]);
-    const elementAttributeValue = element.attributes[attributesNames[index]];
+  if (node.nodeName !== '#text') {
+    const attributesNames = [...new Set([...Object.values(node.attributes).map(attribute => attribute.name), ...Object.keys(element.attributes)])];
+    const attributesCount = Math.max(node.attributes.length, attributesNames.length);
 
-    if (elementAttributeValue && nodeAttributeValue !== elementAttributeValue) {
-      patches.push({ action: 'UPDATE_ATTRIBUTE', index, parent: node, attribute: { name: attributesNames[index], value: elementAttributeValue } });
-    } else if (!elementAttributeValue && nodeAttributeValue) {
-      patches.push({ action: 'REMOVE_ATTRIBUTE', index, parent: node, attribute: { name: attributesNames[index] } });
+    for (let index = 0; index < attributesCount; index++) {
+      const nodeAttributeValue = node.getAttribute(attributesNames[index]);
+      const elementAttributeValue = element.attributes[attributesNames[index]];
+
+      if (elementAttributeValue && nodeAttributeValue !== elementAttributeValue) {
+        patches.push({ action: 'UPDATE_ATTRIBUTE', index, parent: node, attribute: { name: attributesNames[index], value: elementAttributeValue } });
+      } else if (!elementAttributeValue && nodeAttributeValue) {
+        patches.push({ action: 'REMOVE_ATTRIBUTE', index, parent: node, attribute: { name: attributesNames[index] } });
+      }
+    }
+  } else {
+    if (node.nodeValue !== element.attributes.value) {
+      patches.push({ action: 'UPDATE_TEXT', element: node, attribute: { value: element.attributes.value } });
     }
   }
 
@@ -131,6 +135,10 @@ const _updateDOM = (element) => {
     switch (patch.action) {
       case 'UPDATE_ATTRIBUTE': {
         patch.parent.setAttributeNS(null, patch.attribute.name, patch.attribute.value);
+        break;
+      }
+      case 'UPDATE_TEXT': {
+        patch.element.nodeValue = patch.attribute.value;
         break;
       }
       case 'REMOVE_ATTRIBUTE': {
